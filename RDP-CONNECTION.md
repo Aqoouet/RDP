@@ -46,6 +46,15 @@ Traffic: **work PC -> SSH :22 -> VPS -> WG -> home :3389**.
 - If it persists: in an existing local Plasma session, **System Settings -> Display and Monitor -> Compositor** -> uncheck **Enable on startup**, or try session **Xorg** (not Wayland) in SDDM for comparison.
 - Fallback desktop for RDP only: install **xfce4** and set **`~/.xinitrc`** to **`exec dbus-run-session startxfce4`** while debugging.
 
+### Cursor AI chat: "Network disconnected" / stream errors over RDP
+
+- Chat traffic goes **from this PC to the internet**, not through the RDP pipe; remote **X11 + Electron** can still break **long streams** (timeouts, GPU path).
+- **Launcher:** `~/.local/bin/cursor-launch` adds **`--disable-gpu`** and related flags on xrdp displays (`:10+`). Restart Cursor after updating the script.
+- **Try:** in a terminal over RDP: `curl -sI https://api.cursor.sh | head -3` (should return HTTP headers quickly).
+- **Reset cache** for the RDP profile only: quit Cursor, then  
+  `rm -rf ~/.config/Cursor-rdp/{Cache,GPUCache,"Code Cache"}`  
+- **Update Cursor** when you can (newer builds fix streaming edge cases). If it keeps failing, use Cursor on the **local console** for heavy AI chat, or try another remote tool (NoMachine, Parsec, plain SSH) for full desktop.
+
 ### Cursor / AppImage: "file not found" or two instances (local + RDP)
 
 - **Cause:** Cursor is an **AppImage**; while it runs, `cursor` may point at **`/tmp/.mount_Cursor...`**, which **does not exist** in your xrdp session. Two **Plasma sessions** as **`aqouet`** (local + RDP) also confuse **Electron single-instance** (shared lock / IPC).
