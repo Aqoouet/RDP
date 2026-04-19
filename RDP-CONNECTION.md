@@ -46,6 +46,12 @@ Traffic: **work PC -> SSH :22 -> VPS -> WG -> home :3389**.
 - If it persists: in an existing local Plasma session, **System Settings -> Display and Monitor -> Compositor** -> uncheck **Enable on startup**, or try session **Xorg** (not Wayland) in SDDM for comparison.
 - Fallback desktop for RDP only: install **xfce4** and set **`~/.xinitrc`** to **`exec dbus-run-session startxfce4`** while debugging.
 
+### Cursor / AppImage: "file not found" or two instances (local + RDP)
+
+- **Cause:** Cursor is an **AppImage**; while it runs, `cursor` may point at **`/tmp/.mount_Cursor...`**, which **does not exist** in your xrdp session. Two **Plasma sessions** as **`aqouet`** (local + RDP) also confuse **Electron single-instance** (shared lock / IPC).
+- **Fix on home PC:** use **`~/.local/bin/cursor-launch`** and the menu entry **Cursor (AppImage)** (`~/.local/share/applications/cursor-appimage.desktop`). On displays **:10+** (typical xrdp) it uses **`~/.config/Cursor-rdp`** so RDP does not fight the console Cursor.
+- **Best practice:** **close Cursor** on the local session before RDP, or **log out locally** and use only RDP when working remotely.
+
 ## SSH to the VPS from home
 
 - **`ssh vps-rdp`** (main key in **`~/.ssh/config`**).
