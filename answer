@@ -1,0 +1,39 @@
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:48 знак:60
++ Section "ICMP ping (may be blocked вЂ” not required for RDP)"
++                                                            ~
+Непредвиденная лексема ")" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:51 знак:40
++   $ping | ForEach-Object { Write-Host "Ping:              $($_.Addres ...
++                                        ~~~~~
+Непредвиденная лексема "Ping:" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:54 знак:1
++ }
++ ~
+Непредвиденная лексема "}" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:68 знак:94
++ ... H port $SshPort (optional вЂ” checks host reachable on another port)"
++                                                                        ~
+Непредвиденная лексема ")" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:71 знак:15
++   Write-Host "TcpTestSucceeded:  $($tnc22.TcpTestSucceeded)"
++               ~~~~~~~~~~~~~~~~~
+Непредвиденная лексема "TcpTestSucceeded:" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:76 знак:81
++ ... general HTTPS egress (optional вЂ” your PC can reach :443 somewhere)'
++                                                                        ~
+Непредвиденная лексема ")" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:78 знак:47
++ ... ion -ComputerName 'one.one.one.one' -Port 443 -WarningAction Continue
++                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Непредвиденная лексема "one.one.one.one' -Port 443 -WarningAction Continue
+  Write-Host "TcpTestSucceeded:  $($tnc443.TcpTestSucceeded)  (to 1.1.1.1:443)"
+} catch {
+  Write-Host "Test-NetConnection: $_"
+}
+Section 'Proxy" в выражении или операторе.
+C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:103 знак:14
++ Section 'Done'
++              ~
+В строке отсутствует завершающий символ: '.
+    + CategoryInfo          : ParserError: (:) [], ParseException
+    + FullyQualifiedErrorId : UnexpectedToken
