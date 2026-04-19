@@ -1,0 +1,42 @@
+﻿The stack trace reveals two critical details:
+    1. Your home PC is running Linux (platform: 'linux')
+    2. The AI chat stream is dropping (ConnectError: [unknown] Network disconnected during streamAiConnect)
+This isn't just a UI freeze. Cursor's AI chat uses long-lived streaming connections (WebSockets/SSE), and RDP on Linux (usually xrdp) frequently breaks or aggressively times out these streams, causing the Electron main process to hang while retrying.
+Here's how to fix it, optimized for Linux + RDP:
+🔌 1. Fix the Streaming Network Drop
+    • Check for proxy/VPN interference: RDP sessions sometimes route traffic through a different network namespace. Run this in the RDP terminal:
+      curl -v https://api.cursor.sh  # or the actual Cursor AI endpoint
+      If it fails or hangs, disable any local proxy, VPN, or corporate firewall rule that drops idle/long-lived connections.
+    • Disable IPv6 fallback (common cause of silent drops in Electron): Launch Cursor with:
+      cursor --disable-features=WebRtc,NetworkServiceInProcess
+      (Add this to your .desktop file or alias if it works.)
+🖥️ 2. Linux RDP/xrdp Specific Fixes
+xrdp tunnels traffic over a virtual channel that doesn't handle streaming well by default.
+    • Edit ~/.xrdp/xrdp.ini (or /etc/xrdp/xrdp.ini):
+      [xrdp1]
+; Disable aggressive clipboard/network sync that interferes with long connections
+clipboard=false
+enable_compression=false
+      Restart xrdp: sudo systemctl restart xrdp
+    • Alternative: If you're using Xvnc backend, switch to Xorg in your xrdp session manager. Xorg handles modern GPU/network stacks much better.
+🚀 3. Electron Launch Flags for Linux RDP
+Close Cursor completely, then run:
+cursor --disable-gpu --disable-software-rasterizer --disable-features=UseOzonePlatform
+If this stops the freeze, make it permanent in ~/.local/share/applications/cursor.desktop:
+Exec=/usr/bin/cursor --disable-gpu --disable-features=UseOzonePlatform
+🧹 4. Clear Corrupted Stream State
+A dropped stream can leave stale sockets in Electron's cache:
+rm -rf ~/.config/Cursor/Cache
+rm -rf ~/.config/Cursor/GPUCache
+rm -rf ~/.config/Cursor/Code Cache
+Restart Cursor.
+🔄 5. Update & Verify
+    • You're on client_version: '3.1.14'. Cursor has patched several RDP/streaming timeout issues in 3.1.16+. Update if possible.
+    • In Cursor: Settings → AI → Chat → look for "Streaming Responses" or "Use Legacy Chat". Temporarily disable streaming if the toggle exists.
+💡 Better Remote Options for Linux
+If xrdp continues to drop AI streams, switch to protocols that preserve native network/GPU behavior:
+    • NoMachine or X2Go: Native X11 forwarding, no virtual channel overhead
+    • Parsec (Linux host supported): Low-latency, passes through real GPU/network stacks
+    • SSH + X11: ssh -X user@home-pc cursor (simplest, bypasses RDP entirely)
+Next step: Try launching with cursor --disable-gpu from the terminal over RDP and watch the console. If the Network disconnected error disappears, it's confirmed as an xrdp/Electron streaming conflict. Let me know your xrdp version (xrdp -v) and whether you're using Xvnc or Xorg, and I'll give exact config patches.
+
