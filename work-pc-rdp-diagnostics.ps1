@@ -45,15 +45,15 @@ try {
   Write-Host "Reverse lookup:    failed or none ($($_.Exception.Message))"
 }
 
-Section "ICMP ping (may be blocked — not required for RDP)"
+Section "ICMP ping (may be blocked - not required for RDP)"
 try {
   $ping = Test-Connection -ComputerName $VpsIp -Count 2 -ErrorAction Stop
   $ping | ForEach-Object { Write-Host "Ping:              $($_.Address) $($_.ResponseTime) ms" }
 } catch {
-  Write-Host "Ping:              failed — $($_.Exception.Message)"
+  Write-Host "Ping:              failed - $($_.Exception.Message)"
 }
 
-Section "TCP to VPS — RDP tunnel port $RdpPort (required for mstsc)"
+Section "TCP to VPS - RDP tunnel port $RdpPort (required for mstsc)"
 try {
   $tnc = Test-NetConnection -ComputerName $VpsIp -Port $RdpPort -WarningAction Continue
   Write-Host "TcpTestSucceeded:  $($tnc.TcpTestSucceeded)"
@@ -65,7 +65,7 @@ try {
   Write-Host "Test-NetConnection failed: $_"
 }
 
-Section "TCP to VPS — SSH port $SshPort (optional — checks host reachable on another port)"
+Section "TCP to VPS - SSH port $SshPort (optional - checks host reachable on another port)"
 try {
   $tnc22 = Test-NetConnection -ComputerName $VpsIp -Port $SshPort -WarningAction Continue
   Write-Host "TcpTestSucceeded:  $($tnc22.TcpTestSucceeded)"
@@ -73,7 +73,7 @@ try {
   Write-Host "Test-NetConnection: $_"
 }
 
-Section 'TCP general HTTPS egress (optional — your PC can reach :443 somewhere)'
+Section "TCP general HTTPS egress (optional - your PC can reach tcp/443 somewhere)"
 try {
   $tnc443 = Test-NetConnection -ComputerName 'one.one.one.one' -Port 443 -WarningAction Continue
   Write-Host "TcpTestSucceeded:  $($tnc443.TcpTestSucceeded)  (to 1.1.1.1:443)"
