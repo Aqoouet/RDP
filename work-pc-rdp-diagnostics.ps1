@@ -1,17 +1,54 @@
-# RDP tunnel diagnostics (run on Windows WORK PC)
-# Usage (PowerShell):  cd <folder> ; .\work-pc-rdp-diagnostics.ps1
-# If blocked:  powershell -ExecutionPolicy Bypass -File .\work-pc-rdp-diagnostics.ps1
+# RDP tunnel diagnostics (Windows WORK PC). Safe to re-run anytime.
+#
+# Usage:
+#   .\work-pc-rdp-diagnostics.ps1
+#   powershell -ExecutionPolicy Bypass -File .\work-pc-rdp-diagnostics.ps1
+#   .\work-pc-rdp-diagnostics.ps1 -VpsIp 141.105.70.66 -RdpPort 443
+#   .\work-pc-rdp-diagnostics.ps1 -IncludePortProbe
 #
 # Paste the FULL output when asking for help.
 
+[CmdletBinding()]
+param(
+  [string]$VpsIp = '141.105.70.66',
+  [int]$RdpPort = 443,
+  [int]$SshPort = 22,
+  [int]$PortProbeTimeoutMs = 2500,
+  [switch]$IncludePortProbe
+)
+
 $ErrorActionPreference = 'Continue'
 
-# --- Edit if your VPS or port changed ---
-$VpsIp   = '141.105.70.66'
-$RdpPort = 443
-$SshPort = 22
+Write-Host ""
+Write-Host "RDP tunnel diagnostics - re-run after office/VPS/home PC changes." -ForegroundColor Cyan
+Write-Host "Target: ${VpsIp}  RDP port: ${RdpPort}  SSH: ${SshPort}" -ForegroundColor Cyan
+Write-Host ""
 
 function Section { param([string]$Title) Write-Host "`n======== $Title ========" -ForegroundColor Cyan }
+
+function Test-TcpQuick {
+  param(
+    [string]$TargetHost,
+    [int]$Port,
+    [int]$Timeout
+  )
+  $tcp = $null
+  try {
+    $tcp = New-Object System.Net.Sockets.TcpClient
+    $iar = $tcp.BeginConnect($TargetHost, $Port, $null, $null)
+    if (-not $iar.AsyncWaitHandle.WaitOne($Timeout, $false)) {
+      return 'timeout'
+    }
+    $tcp.EndConnect($iar)
+    return 'open'
+  } catch {
+    return 'fail'
+  } finally {
+    if ($null -ne $tcp) {
+      try { $tcp.Close() } catch { }
+    }
+  }
+}
 
 Section 'Environment'
 Write-Host "When:              $(Get-Date -Format 'o')"
@@ -53,9 +90,13 @@ try {
   Write-Host "Ping:              failed - $($_.Exception.Message)"
 }
 
+$script:RdpTcpOk = $false
+$script:SshTcpOk = $false
+
 Section "TCP to VPS - RDP tunnel port $RdpPort (required for mstsc)"
 try {
   $tnc = Test-NetConnection -ComputerName $VpsIp -Port $RdpPort -WarningAction Continue
+  $script:RdpTcpOk = [bool]$tnc.TcpTestSucceeded
   Write-Host "TcpTestSucceeded:  $($tnc.TcpTestSucceeded)"
   Write-Host "RemoteAddress:     $($tnc.RemoteAddress)"
   Write-Host "RemotePort:        $($tnc.RemotePort)"
@@ -68,6 +109,7 @@ try {
 Section "TCP to VPS - SSH port $SshPort (optional - checks host reachable on another port)"
 try {
   $tnc22 = Test-NetConnection -ComputerName $VpsIp -Port $SshPort -WarningAction Continue
+  $script:SshTcpOk = [bool]$tnc22.TcpTestSucceeded
   Write-Host "TcpTestSucceeded:  $($tnc22.TcpTestSucceeded)"
 } catch {
   Write-Host "Test-NetConnection: $_"
@@ -79,6 +121,15 @@ try {
   Write-Host "TcpTestSucceeded:  $($tnc443.TcpTestSucceeded)  (to 1.1.1.1:443)"
 } catch {
   Write-Host "Test-NetConnection: $_"
+}
+
+if ($IncludePortProbe) {
+  Section "Extra port probe to VPS (TcpClient, ${PortProbeTimeoutMs}ms each)"
+  $extraPorts = @(22, 80, 443, 8080, 8443, 3389, 23389, 2222)
+  foreach ($p in ($extraPorts | Select-Object -Unique | Sort-Object)) {
+    $r = Test-TcpQuick -TargetHost $VpsIp -Port $p -Timeout $PortProbeTimeoutMs
+    Write-Host ("Port {0,-5} {1}" -f $p, $r)
+  }
 }
 
 Section 'Proxy (can block corporate clients)'
@@ -100,6 +151,19 @@ if (-not (Get-Command mstsc.exe -ErrorAction SilentlyContinue)) {
   Write-Host "mstsc.exe:         $(Get-Command mstsc.exe | Select-Object -ExpandProperty Source)"
 }
 
+Section 'Summary'
+if ($script:RdpTcpOk) {
+  Write-Host "RDP port ${RdpPort}:  REACHABLE from this PC - try mstsc: ${VpsIp}:${RdpPort}" -ForegroundColor Green
+} else {
+  Write-Host "RDP port ${RdpPort}:  NOT reachable - office may block it, or VPS/home tunnel/xrdp is down." -ForegroundColor Red
+}
+if ($script:SshTcpOk) {
+  Write-Host "SSH port ${SshPort}:  REACHABLE (optional fallback: ssh -L local:10.8.0.2:3389)." -ForegroundColor Green
+} else {
+  Write-Host "SSH port ${SshPort}:  not reachable from this PC." -ForegroundColor Yellow
+}
+
 Section 'Done'
 Write-Host "Send everything above (from Environment through Done) as plain text."
-Write-Host "In mstsc use:      ${VpsIp}:${RdpPort}"
+Write-Host "Re-run:  powershell -ExecutionPolicy Bypass -File .\work-pc-rdp-diagnostics.ps1"
+Write-Host "         .\work-pc-rdp-diagnostics.ps1 -IncludePortProbe"
