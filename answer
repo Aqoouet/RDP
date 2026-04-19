@@ -1,39 +1,42 @@
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:48 знак:60
-+ Section "ICMP ping (may be blocked вЂ” not required for RDP)"
-+                                                            ~
-Непредвиденная лексема ")" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:51 знак:40
-+   $ping | ForEach-Object { Write-Host "Ping:              $($_.Addres ...
-+                                        ~~~~~
-Непредвиденная лексема "Ping:" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:54 знак:1
-+ }
-+ ~
-Непредвиденная лексема "}" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:68 знак:94
-+ ... H port $SshPort (optional вЂ” checks host reachable on another port)"
-+                                                                        ~
-Непредвиденная лексема ")" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:71 знак:15
-+   Write-Host "TcpTestSucceeded:  $($tnc22.TcpTestSucceeded)"
-+               ~~~~~~~~~~~~~~~~~
-Непредвиденная лексема "TcpTestSucceeded:" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:76 знак:81
-+ ... general HTTPS egress (optional вЂ” your PC can reach :443 somewhere)'
-+                                                                        ~
-Непредвиденная лексема ")" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:78 знак:47
-+ ... ion -ComputerName 'one.one.one.one' -Port 443 -WarningAction Continue
-+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Непредвиденная лексема "one.one.one.one' -Port 443 -WarningAction Continue
-  Write-Host "TcpTestSucceeded:  $($tnc443.TcpTestSucceeded)  (to 1.1.1.1:443)"
-} catch {
-  Write-Host "Test-NetConnection: $_"
-}
-Section 'Proxy" в выражении или операторе.
-C:\Users\rymax1e\Desktop\work-pc-rdp-diagnostics.ps1:103 знак:14
-+ Section 'Done'
-+              ~
-В строке отсутствует завершающий символ: '.
-    + CategoryInfo          : ParserError: (:) [], ParseException
-    + FullyQualifiedErrorId : UnexpectedToken
+======== Environment ========                                                                                                                                                                                                                                                           Display version:   Майкрософт Windows 11 Корпоративная                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ======== Network (summary) ========                                                                                                                                                                                                                                                     Interface:         Беспроводная сеть
+IPv4 address:      10.10.10.92
+Gateway:           10.10.10.1
+DNS servers:       fe80::52ff:20ff:fed1:b6b, fe80::52ff:20ff:fed1:b6b, 10.10.10.1
+
+======== DNS resolve (VPS) 141.105.70.66 ========
+Reverse lookup:    failed or none (Исключение при вызове "GetHostEntry" с "1" аргументами: "Этот хост неизвестен")
+
+======== ICMP ping (may be blocked - not required for RDP) ========
+Ping:              141.105.70.66 9 ms
+Ping:              141.105.70.66 5 ms
+
+======== TCP to VPS - RDP tunnel port 23389 (required for mstsc) ========
+ПРЕДУПРЕЖДЕНИЕ: TCP connect to (141.105.70.66 : 23389) failed
+TcpTestSucceeded:  False
+RemoteAddress:     141.105.70.66
+RemotePort:        23389
+InterfaceAlias:    Беспроводная сеть
+PingSucceeded:     True
+
+======== TCP to VPS - SSH port 22 (optional - checks host reachable on another port) ========
+TcpTestSucceeded:  True
+
+======== TCP general HTTPS egress (optional - your PC can reach tcp/443 somewhere) ========
+TcpTestSucceeded:  True  (to 1.1.1.1:443)
+
+======== Proxy (can block corporate clients) ========
+System proxy URL:  https://141.105.70.66/
+
+======== RDP process / MSTSC ========
+
+   Id ProcessName StartTime
+   -- ----------- ---------
+11436 mstsc       19.04.2026 15:18:16
+19912 mstsc       18.04.2026 11:01:20
+
+
+mstsc.exe:         C:\WINDOWS\system32\mstsc.exe
+
+======== Done ========
+Send everything above (from Environment through Done) as plain text.
+In mstsc use:      141.105.70.66:23389
