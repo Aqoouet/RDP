@@ -37,7 +37,14 @@ Traffic: **work PC -> SSH :22 -> VPS -> WG -> home :3389**.
 1. **WireGuard**
    - **`/home/aqouet/Desktop/RDP/home-pc.conf`** and **`/etc/wireguard/rdp-home.conf`** / **`wg-quick@rdp-home`**.
    - Check: **`ping -c 2 10.8.0.1`**
-2. **xrdp** on **3389**, **`~/.xinitrc`** -> **startplasma-x11**.
+2. **xrdp** on **3389**. **`~/.xinitrc`** starts Plasma with **`dbus-run-session startplasma-x11`** and **software OpenGL** so KWin does not stall on a black screen over RDP.
+
+### Black screen after the Plasma logo (xrdp)
+
+- Already mitigated in **`~/.xinitrc`** (`LIBGL_ALWAYS_SOFTWARE=1`, `KWIN_OPENGL_INTERFACE=software`, `dbus-run-session`).
+- After changing **`~/.xinitrc`**, disconnect RDP and on the home PC run: **`sudo systemctl restart xrdp xrdp-sesman`**, then connect again.
+- If it persists: in an existing local Plasma session, **System Settings -> Display and Monitor -> Compositor** -> uncheck **Enable on startup**, or try session **Xorg** (not Wayland) in SDDM for comparison.
+- Fallback desktop for RDP only: install **xfce4** and set **`~/.xinitrc`** to **`exec dbus-run-session startxfce4`** while debugging.
 
 ## SSH to the VPS from home
 
