@@ -21,7 +21,7 @@ $PortsToTry = @(
   8080,  # alt HTTP
   8443,  # alt HTTPS
   3389,  # RDP (sometimes blocked outbound)
-  23389, # your current tunnel port
+  23389, # legacy tunnel port (unused if using 443)
   2222,  # alt SSH
   5900,  # VNC
   8000,

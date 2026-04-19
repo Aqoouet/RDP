@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Continue'
 
 # --- Edit if your VPS or port changed ---
 $VpsIp   = '141.105.70.66'
-$RdpPort = 23389
+$RdpPort = 443
 $SshPort = 22
 
 function Section { param([string]$Title) Write-Host "`n======== $Title ========" -ForegroundColor Cyan }
