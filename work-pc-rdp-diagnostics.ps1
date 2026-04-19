@@ -158,9 +158,14 @@ if ($script:RdpTcpOk) {
   Write-Host "RDP port ${RdpPort}:  NOT reachable - office may block it, or VPS/home tunnel/xrdp is down." -ForegroundColor Red
 }
 if ($script:SshTcpOk) {
-  Write-Host "SSH port ${SshPort}:  REACHABLE (optional fallback: ssh -L local:10.8.0.2:3389)." -ForegroundColor Green
+  Write-Host "SSH port ${SshPort}:  REACHABLE." -ForegroundColor Green
 } else {
   Write-Host "SSH port ${SshPort}:  not reachable from this PC." -ForegroundColor Yellow
+}
+if (-not $script:RdpTcpOk -and $script:SshTcpOk) {
+  Write-Host ""
+  Write-Host "Only SSH works from here: use Path B - run work-ssh-rdp-tunnel.ps1 then mstsc to 127.0.0.1:13389" -ForegroundColor Cyan
+  Write-Host "(Copy id_ed25519_work_tunnel private key from home PC to %USERPROFILE%\.ssh\ - see RDP-CONNECTION.md)" -ForegroundColor Cyan
 }
 
 Section 'Done'

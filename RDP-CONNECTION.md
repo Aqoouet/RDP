@@ -1,35 +1,45 @@
 # RDP: work PC → home PC (via VPS)
 
-Your **home PC is this Linux machine** (Arch). The VPS forwards **`141.105.70.66:443` → `10.8.0.2:3389`** on the WireGuard tunnel (TCP **443** so strict office networks usually allow it).
+Your **home PC is this Linux machine** (Arch). The VPS has WireGuard to home **`10.8.0.2`** and can reach **xrdp** on **`10.8.0.2:3389`**.
+
+## Path A - Direct RDP to VPS public port (when office allows it)
+
+VPS **firewalld** forwards **`141.105.70.66:443` -> `10.8.0.2:3389`**.
+
+1. **mstsc** -> **`141.105.70.66:443`**
+2. xrdp: your **home Linux** user (e.g. `aqouet`), not root.
+
+If **`work-pc-rdp-diagnostics.ps1`** shows **443 not reachable** but **22 OK**, use **Path B**.
+
+## Path B - SSH tunnel (when ONLY port 22 works - strict office)
+
+Traffic: **work PC -> SSH :22 -> VPS -> WG -> home :3389**.
+
+### One-time setup
+
+1. On **home PC**, the private key for work is **`~/.ssh/id_ed25519_work_tunnel`** (public key is already on the VPS for **root**).
+2. Copy **only** the file **`id_ed25519_work_tunnel`** (no `.pub`) to the work PC:
+   - **`%USERPROFILE%\.ssh\id_ed25519_work_tunnel`**
+3. Do **not** put this key in Git, email, or chat.
+
+### Every session on work PC
+
+1. Home PC: **WireGuard** up, **xrdp** running (as usual).
+2. Run **`work-ssh-rdp-tunnel.ps1`** (leave the window open):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\work-ssh-rdp-tunnel.ps1
+   ```
+3. **mstsc** -> **`127.0.0.1:13389`**
+4. xrdp: your **home Linux** user and password.
 
 ## On the home PC (this PC) - before / while you need access
 
 1. **WireGuard**
-   - Master copy: **`/home/aqouet/Desktop/RDP/home-pc.conf`** (no `DNS =` line - avoids **resolvconf** issues on Arch).
-   - **Boot / auto:** same config is installed as **`/etc/wireguard/rdp-home.conf`** and **`wg-quick@rdp-home.service`** is **enabled** - the tunnel comes up after reboot.
-   - Manual: `sudo wg-quick up /home/aqouet/Desktop/RDP/home-pc.conf` (only if the service is stopped; do not run two clients with the same keys at once).
-   - Check: `ping -c 2 10.8.0.1` (should reply while the tunnel is up).
-   - Stop (if you disabled the service): `sudo systemctl stop wg-quick@rdp-home` or `sudo wg-quick down /etc/wireguard/rdp-home.conf`
-2. **RDP server on Linux** (for **mstsc** / RDP clients)
-   - **xrdp** + **xorgxrdp** are installed from the **AUR** (not in official repos). **`xrdp`** and **`xrdp-sesman`** are **enabled** and listen on **TCP 3389**.
-   - **Plasma (X11):** **`~/.xinitrc`** runs **`startplasma-x11`** so xrdp gets a full KDE session. Log in with your **Linux username** (e.g. `aqouet`) and **your user password**.
-   - If you use a host firewall, allow **3389/tcp** (traffic arrives via the tunnel to this host).
+   - **`/home/aqouet/Desktop/RDP/home-pc.conf`** and **`/etc/wireguard/rdp-home.conf`** / **`wg-quick@rdp-home`**.
+   - Check: **`ping -c 2 10.8.0.1`**
+2. **xrdp** on **3389**, **`~/.xinitrc`** -> **startplasma-x11**.
 
-## On the work PC
+## SSH to the VPS from home
 
-1. Open **Remote Desktop Connection** (`Win + R` → `mstsc`).
-2. **Computer:** `141.105.70.66:443` (always include **:443**; do not rely on the default RDP port).
-3. Sign in with your **Linux / xrdp** credentials (not a Windows account).
-
-If the work PC is also Linux, use an RDP client (e.g. **Remmina**, **freerdp**) pointing at `141.105.70.66:443` the same way.
-
-## If it does not connect
-
-- Home: WireGuard must stay **up** (`ping 10.8.0.1` works).
-- Home: **xrdp** (or your RDP server) must be **running** and listening on **3389**.
-- Home: not sleeping / not suspending if you need it reachable.
-- Office: if **443** to your VPS is blocked, use **`work-pc-port-probe.ps1`** and consider **SSH port forwarding** on port **22** (see repo scripts / ask for steps).
-
-## SSH to the VPS (optional)
-
-From this PC: `ssh vps-rdp` (see `~/.ssh/config`).
+- **`ssh vps-rdp`** (main key in **`~/.ssh/config`**).
+- Work-tunnel key: **`ssh -i ~/.ssh/id_ed25519_work_tunnel root@141.105.70.66`** (for testing).
